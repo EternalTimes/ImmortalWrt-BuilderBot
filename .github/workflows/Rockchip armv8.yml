@@ -87,6 +87,9 @@ on:
         required: false
         default: false
 
+permissions:
+  contents: write
+  
 jobs:
   build_firmware:
     runs-on: ubuntu-latest
@@ -210,8 +213,9 @@ jobs:
           ls -Ralh
 
       - name: Upload firmware to Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.WORKFLOW_WRITE_TOKEN }}  # ★ 用你的 PAT
           tag_name: ${{ steps.prepare_artifacts.outputs.release_tag }}
           name: "ImmortalWrt ${{ steps.prepare_artifacts.outputs.release_tag }} (rockchip/armv8)"
           body: |
@@ -221,18 +225,13 @@ jobs:
             **RootFS Size:** ${{ github.event.inputs.rootfs_size_mb }}MB
             **Custom Packages:** `${{ github.event.inputs.custom_packages }}`
             **Build Stability Preference:** ${{ github.event.inputs.build_stability }}
-            **ImageBuilder URL:** $IMAGEBUILDER_URL
+            **ImageBuilder URL:** ${{ env.IMAGEBUILDER_URL }}
             **Workflow Run ID:** ${{ github.run_id }}
             **Commit:** ${{ github.sha }}
           files: |
             ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.img.gz
             ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.img
             ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.manifest
-            ${{ steps.prepare_artifacts.outputs.artifact_path }}/sha250*
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.json
             ${{ steps.prepare_artifacts.outputs.artifact_path }}/sha256sums
-            ${{ steps.prepare_artifacts.outputs.artifact_path }}/version.buildinfo
-            ${{ steps.prepare_artifacts.outputs.artifact_path }}/config.buildinfo
-            ${{ steps.prepare_artifacts.outputs.artifact_path }}/feeds.buildinfo
           fail_on_unmatched_files: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
