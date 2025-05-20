@@ -33,11 +33,7 @@ on:
         default: "snapshot"
         options:
           - snapshot
-          - stable
-      enable_verbose_script_log:
-        description: "启用详细日志"
-        type: boolean
-        required: false
+          - stable        required: false
         default: false
 
 jobs:
