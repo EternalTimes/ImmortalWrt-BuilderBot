@@ -1,0 +1,63 @@
+name: Update Rockchip armv8 Workflow Inputs
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'immortalwrt_info.json'
+
+jobs:
+  update_workflow:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse device_profiles and stability from immortalwrt_info.json
+        id: parse
+        run: |
+          python3 <<'EOF'
+import json
+
+with open('immortalwrt_info.json', encoding='utf-8') as f:
+    data = json.load(f)
+
+profiles = data.get('snapshots', {}).get('profiles', [])
+stable_profiles = data.get('latest_stable', {}).get('profiles', [])
+# 合并两种 profile，去重
+all_profiles = sorted(set(profiles + stable_profiles))
+
+# 生成 workflow_dispatch inputs 下拉格式
+profile_options = ['          - {}'.format(p) for p in all_profiles]
+profile_yaml = '\n'.join(profile_options)
+
+# 固定写 snapshot、stable，下游如果有 beta/test，可扩展
+stabilities = ['snapshot', 'stable']
+stability_options = ['          - {}'.format(s) for s in stabilities]
+stability_yaml = '\n'.join(stability_options)
+
+# 保存到 outputs
+with open('profile_options.txt', 'w', encoding='utf-8') as f:
+    f.write(profile_yaml)
+with open('stability_options.txt', 'w', encoding='utf-8') as f:
+    f.write(stability_yaml)
+EOF
+
+      - name: Patch Rockchip armv8.yml with new device_profiles and stability list
+        run: |
+          cp .github/workflows/Rockchip\ armv8.yml Rockchip_armv8.bak
+
+          # 替换 device_profiles options 列表
+          awk '/device_profiles:/ {print;flag=1;next} flag && /options:/ {print;getline;while($0~/^ +-/){getline};flag=0;system("cat profile_options.txt");next} 1' Rockchip_armv8.bak > tmp1.yml
+
+          # 替换 build_stability options 列表
+          awk '/build_stability:/ {print;flag=1;next} flag && /options:/ {print;getline;while($0~/^ +-/){getline};flag=0;system("cat stability_options.txt");next} 1' tmp1.yml > .github/workflows/Rockchip\ armv8.yml
+
+      - name: Commit and push updated workflow file
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/Rockchip\ armv8.yml
+          git commit -m "chore: 自动更新 device_profiles 和 build_stability 选项 (来自 immortalwrt_info.json)" || echo "No changes"
+          git push || echo "No changes to push"
