@@ -4,10 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       device_profiles:
-        description: "设备 Profile 名称（可多个，用空格分隔）"
-        type: string
+        description: "设备 Profile 名称"
+        type: choice
         required: true
         default: "friendlyarm_nanopi-r2s"
+        options:
+          - friendlyarm_nanopi-r2s  # 这里会自动生成
+      build_stability:
+        description: "选择系统类型"
+        type: choice
+        required: true
+        default: "snapshot"
+        options:
+          - snapshot
+          - stable
       rootfs_size_mb:
         description: "RootFS 大小 (MB)"
         type: string
@@ -26,14 +36,6 @@ on:
         type: string
         required: false
         default: ""
-      build_stability:
-        description: "选择快照或稳定版"
-        type: choice
-        required: true
-        default: "snapshot"
-        options:
-          - snapshot
-          - stable
       enable_verbose_script_log:
         description: "启用详细日志"
         type: boolean
@@ -44,59 +46,26 @@ jobs:
   build_firmware:
     runs-on: ubuntu-latest
     name: Build Firmware for ${{ github.event.inputs.device_profiles }}
+    env:
+      SNAPSHOT_IMAGEBUILDER_URL: ""   # update_workflow_inputs.py 自动写入
+      STABLE_IMAGEBUILDER_URL: ""     # update_workflow_inputs.py 自动写入
 
     steps:
-      # 1. 拉取仓库（如有脚本/补丁需要用到）
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. 拉取自动同步的 ImmortalWrt 版本信息
-      - name: Download version info
-        run: |
-          curl -sSL -o immortalwrt_info.json "https://raw.githubusercontent.com/${{ github.repository }}/main/immortalwrt_info.json"
-          cat immortalwrt_info.json
-
-      # 3. 自动识别 snapshot/stable，提取 ImageBuilder 下载地址
-      - name: Parse IMAGEBUILDER_URL from version info
-        id: set_imagebuilder_url
-        run: |
-          python3 <<'EOF'
-import json, os, sys
-choice = "${{ github.event.inputs.build_stability }}".strip()
-with open("immortalwrt_info.json", encoding="utf-8") as f:
-    data = json.load(f)
-if choice == "snapshot":
-    url = data["snapshots"]["imagebuilder_url"]
-    ver = data["snapshots"]["version_name"]
-else:
-    url = data["latest_stable"]["imagebuilder_url"]
-    ver = data["latest_stable"]["version_name"]
-if not url:
-    print(f"::error ::No imagebuilder url found for {choice}")
-    sys.exit(1)
-with open(os.environ["GITHUB_ENV"], "a") as envf:
-    envf.write(f"IMAGEBUILDER_URL={url}\n")
-    envf.write(f"VERSION_DISPLAY={ver}\n")
-print(f"IMAGEBUILDER_URL={url}")
-EOF
-
-      # 4. 展示所有用户输入参数和自动识别结果
       - name: Show build parameters
         run: |
-          echo "------ Build Parameters ------"
-          echo "Device Profiles:      ${{ github.event.inputs.device_profiles }}"
-          echo "RootFS Size (MB):     ${{ github.event.inputs.rootfs_size_mb }}"
-          echo "Custom Packages:      ${{ github.event.inputs.custom_packages }}"
-          echo "ImageBuilder URL:     $IMAGEBUILDER_URL"
-          echo "Stability:            ${{ github.event.inputs.build_stability }}"
-          echo "Tag Suffix:           ${{ github.event.inputs.release_tag_suffix }}"
-          echo "Verbose Log:          ${{ github.event.inputs.enable_verbose_script_log }}"
-          echo "------------------------------"
+          echo "Device: ${{ github.event.inputs.device_profiles }}"
+          echo "Stability: ${{ github.event.inputs.build_stability }}"
+          echo "RootFS Size: ${{ github.event.inputs.rootfs_size_mb }}"
+          echo "Custom Packages: ${{ github.event.inputs.custom_packages }}"
+          echo "Tag Suffix: ${{ github.event.inputs.release_tag_suffix }}"
+          echo "Verbose Log: ${{ github.event.inputs.enable_verbose_script_log }}"
           if [ "${{ github.event.inputs.enable_verbose_script_log }}" == "true" ]; then
             set -x
           fi
 
-      # 5. 安装依赖
       - name: Install build dependencies
         run: |
           sudo apt update
@@ -104,7 +73,6 @@ EOF
             build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk \
             git gettext libssl-dev xsltproc rsync wget curl unzip file ccache python3 python3-pip
 
-      # 6. ccache 配置
       - name: Configure ccache
         run: |
           mkdir -p $GITHUB_WORKSPACE/ccache
@@ -112,7 +80,15 @@ EOF
           echo "CCACHE_DIR=$GITHUB_WORKSPACE/ccache" >> $GITHUB_ENV
           echo "USE_CCACHE=1" >> $GITHUB_ENV
 
-      # 7. 下载并解压 ImageBuilder
+      - name: Select ImageBuilder URL
+        id: set_imagebuilder_url
+        run: |
+          if [ "${{ github.event.inputs.build_stability }}" = "snapshot" ]; then
+            echo "IMAGEBUILDER_URL=${SNAPSHOT_IMAGEBUILDER_URL}" >> $GITHUB_ENV
+          else
+            echo "IMAGEBUILDER_URL=${STABLE_IMAGEBUILDER_URL}" >> $GITHUB_ENV
+          fi
+
       - name: Download and extract ImageBuilder
         run: |
           echo "Downloading ImageBuilder: $IMAGEBUILDER_URL"
@@ -120,16 +96,12 @@ EOF
           mkdir -p imagebuilder
           tar --zstd -xf immortalwrt-imagebuilder.tar.zst -C imagebuilder --strip-components=1
           echo "ImageBuilder extracted."
-        env:
-          IMAGEBUILDER_URL: ${{ env.IMAGEBUILDER_URL }}
 
-      # 8. 清理历史构建残留
       - name: Clean previous build
         working-directory: ${{ github.workspace }}/imagebuilder
         run: |
           make clean || true
 
-      # 9. 固件编译
       - name: Build firmware
         working-directory: ${{ github.workspace }}/imagebuilder
         run: |
@@ -138,20 +110,19 @@ EOF
           [ -z "$PACKAGES_TO_BUILD" ] && PACKAGES_ARG="" || PACKAGES_ARG="PACKAGES=\"$PACKAGES_TO_BUILD\""
           ROOTFS_SIZE_ARG="CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}"
           PROFILES_ARG="PROFILES=\"${{ github.event.inputs.device_profiles }}\""
-
           CURRENT_DATE=$(date +%Y%m%d)
           SANITIZED_PROFILES=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_')
           EXTRA_SUFFIX="-${SANITIZED_PROFILES}-${CURRENT_DATE}"
-          [ -n "${{ github.event.inputs.release_tag_suffix }}" ] && EXTRA_SUFFIX="${EXTRA_SUFFIX}-${{ github.event.inputs.release_tag_suffix }}"
-          [ "${{ github.event.inputs.build_stability }}" != "snapshot" ] && EXTRA_SUFFIX="${EXTRA_SUFFIX}-${{ github.event.inputs.build_stability }}"
+          if [ -n "${{ github.event.inputs.release_tag_suffix }}" ]; then
+            EXTRA_SUFFIX="${EXTRA_SUFFIX}-${{ github.event.inputs.release_tag_suffix }}"
+          fi
           EXTRA_IMAGE_NAME_SUFFIX_ARG="EXTRA_IMAGE_NAME_SUFFIX=${EXTRA_SUFFIX}"
-
           BUILD_COMMAND="make image -j$(nproc) $PROFILES_ARG $PACKAGES_ARG $ROOTFS_SIZE_ARG $EXTRA_IMAGE_NAME_SUFFIX_ARG V=s"
           echo "Build command: $BUILD_COMMAND"
           eval $BUILD_COMMAND
+          echo "Firmware build completed."
 
-      # 10. 归档制品准备 Release
-      - name: Prepare firmware artifacts
+      - name: Prepare artifacts for release
         id: prepare_artifacts
         run: |
           ARTIFACT_DIR="${{ github.workspace }}/imagebuilder/bin/targets/rockchip/armv8"
@@ -165,20 +136,25 @@ EOF
           CURRENT_DATE_TAG=$(date +%Y.%m.%d)
           SANITIZED_PROFILES_TAG=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_' | tr -cs 'a-zA-Z0-9_.-' '_' | cut -c1-50)
           RELEASE_TAG="immortalwrt-${SANITIZED_PROFILES_TAG}-${CURRENT_DATE_TAG}"
-          [ -n "${{ github.event.inputs.release_tag_suffix }}" ] && RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.release_tag_suffix }}"
-          [ "${{ github.event.inputs.build_stability }}" != "snapshot" ] && RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.build_stability }}"
+          if [ -n "${{ github.event.inputs.release_tag_suffix }}" ]; then
+            RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.release_tag_suffix }}"
+          fi
+          if [ "${{ github.event.inputs.build_stability }}" != "snapshot" ]; then
+            RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.build_stability }}"
+          fi
           RELEASE_TAG=$(echo "$RELEASE_TAG" | tr -cs 'a-zA-Z0-9_.-' '_')
 
+          echo "Release tag: $RELEASE_TAG"
           echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
           echo "artifact_path=${ARTIFACT_DIR}" >> $GITHUB_OUTPUT
+        working-directory: ${{ github.workspace }}
 
-      # 11. Debug: 列出所有生成文件
-      - name: List generated files
+      - name: List Generated Files for Debugging
         working-directory: ${{ github.workspace }}/imagebuilder/bin/targets/rockchip/armv8
         run: |
+          echo "Listing files in ${{ github.workspace }}/imagebuilder/bin/targets/rockchip/armv8:"
           ls -Ralh
 
-      # 12. 上传 Release
       - name: Upload firmware to Release
         uses: softprops/action-gh-release@v1
         with:
@@ -190,8 +166,8 @@ EOF
             **Device Profile(s):** ${{ github.event.inputs.device_profiles }}
             **RootFS Size:** ${{ github.event.inputs.rootfs_size_mb }}MB
             **Custom Packages:** `${{ github.event.inputs.custom_packages }}`
-            **Build Stability:** ${{ github.event.inputs.build_stability }}
-            **ImageBuilder URL:** ${{ env.IMAGEBUILDER_URL }}
+            **Build Stability Preference:** ${{ github.event.inputs.build_stability }}
+            **ImageBuilder URL:** $IMAGEBUILDER_URL
             **Workflow Run ID:** ${{ github.run_id }}
             **Commit:** ${{ github.sha }}
           files: |
