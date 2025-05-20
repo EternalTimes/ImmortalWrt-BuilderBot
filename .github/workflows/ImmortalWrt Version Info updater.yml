@@ -96,7 +96,7 @@ jobs:
           stable_output = {}
           if latest_stable:
               stable_url = f"{base_url}/releases/{latest_stable}/{arch_path}"
-              stable_ib = find_file_url(stable_url, fr"immortalwrt-{latest_stable}-imagebuilder.*rockchip-armv8.*\.tar\.zst")
+              stable_ib = find_file_url(stable_url, fr"immortalwrt-imagebuilder-{re.escape(latest_stable)}-rockchip-armv8.*\.tar\.zst")
               stable_profiles_url = find_file_url(stable_url, r"profiles\.json")
               stable_profiles = get_profiles(stable_profiles_url)
               stable_output = {
