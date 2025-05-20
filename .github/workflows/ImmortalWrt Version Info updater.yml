@@ -1,0 +1,170 @@
+name: Update ImmortalWrt Version Info
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  fetch_info:
+    runs-on: ubuntu-latest
+    outputs:
+      info_file_path: ${{ steps.commit_info.outputs.info_file_path }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install requirements
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip curl wget
+          pip3 install requests beautifulsoup4
+
+      - name: Fetch and process ImmortalWrt info with Python
+        id: fetch_script
+        run: |
+          cat << 'EOF' > python_script.py
+          import json
+          import datetime
+          import requests
+          from bs4 import BeautifulSoup
+          import re
+          from urllib.parse import urljoin
+
+          base_url = "https://downloads.immortalwrt.org"
+          arch_path = "targets/rockchip/armv8/"
+          output_data = {}
+
+          # 获取 releases 页面所有版本号
+          def get_latest_release():
+              releases_url = f"{base_url}/releases/"
+              try:
+                  r = requests.get(releases_url, timeout=30)
+                  r.raise_for_status()
+                  soup = BeautifulSoup(r.text, "html.parser")
+                  versions = []
+                  for a in soup.find_all('a', href=True):
+                      # 只抓形如 24.10.1 这种目录名
+                      if re.match(r"\d+\.\d+\.\d+/?$", a['href']):
+                          version = a['href'].strip('/').replace('/', '')
+                          versions.append(version)
+                  versions = sorted(versions, key=lambda s: list(map(int, s.split('.'))), reverse=True)
+                  if versions:
+                      print(f"Latest stable version: {versions[0]}")
+                      return versions[0]
+                  else:
+                      print("No stable versions found.")
+              except Exception as e:
+                  print(f"Error fetching releases: {e}")
+              return None
+
+          # 从目录页面查找文件
+          def find_file_url(dir_url, pattern):
+              try:
+                  resp = requests.get(dir_url, timeout=30)
+                  resp.raise_for_status()
+                  soup = BeautifulSoup(resp.text, "html.parser")
+                  file_pattern = re.compile(pattern)
+                  for a in soup.find_all('a', href=True):
+                      if file_pattern.search(a['href']):
+                          full_url = urljoin(dir_url, a['href'])
+                          return full_url
+              except Exception as e:
+                  print(f"Error fetching {dir_url}: {e}")
+              return None
+
+          # 获取 profiles 列表
+          def get_profiles(profiles_url):
+              if not profiles_url:
+                  return []
+              try:
+                  r = requests.get(profiles_url, timeout=30)
+                  r.raise_for_status()
+                  data = r.json()
+                  return sorted(list(data.get("profiles", {}).keys()))
+              except Exception as e:
+                  print(f"Error fetching/parsing profiles.json: {e}")
+                  return []
+
+          # Snapshots
+          snap_url = f"{base_url}/snapshots/{arch_path}"
+          snapshot_ib = find_file_url(snap_url, r"immortalwrt-imagebuilder.*rockchip-armv8.*\.tar\.zst")
+          snapshot_profiles_url = find_file_url(snap_url, r"profiles\.json")
+          snapshot_profiles = get_profiles(snapshot_profiles_url)
+          output_data["snapshots"] = {
+              "version_name": "Development Snapshots",
+              "imagebuilder_url": snapshot_ib,
+              "profiles_json_url": snapshot_profiles_url,
+              "profiles": snapshot_profiles,
+              "last_updated": datetime.datetime.utcnow().isoformat() + "Z"
+          }
+
+          # Stable (auto-discovered)
+          latest_stable = get_latest_release()
+          stable_output = {}
+          if latest_stable:
+              stable_url = f"{base_url}/releases/{latest_stable}/{arch_path}"
+              stable_ib = find_file_url(stable_url, fr"immortalwrt-{latest_stable}-imagebuilder.*rockchip-armv8.*\.tar\.zst")
+              stable_profiles_url = find_file_url(stable_url, r"profiles\.json")
+              stable_profiles = get_profiles(stable_profiles_url)
+              stable_output = {
+                  "version_name": latest_stable,
+                  "imagebuilder_url": stable_ib,
+                  "profiles_json_url": stable_profiles_url,
+                  "profiles": stable_profiles,
+                  "last_updated": datetime.datetime.utcnow().isoformat() + "Z"
+              }
+              output_data[f"stable_{latest_stable.replace('.', '_')}"] = stable_output
+              output_data["latest_stable"] = stable_output
+
+          with open("version_info_output.json", "w") as f:
+              json.dump(output_data, f, indent=2)
+          print(json.dumps(output_data, indent=2))
+          EOF
+
+          python3 python_script.py
+
+          # 正确输出变量以便下游引用
+          echo "output_file=version_info_output.json" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push updated info
+        id: commit_info
+        run: |
+          INFO_FILE_IN_REPO="immortalwrt_info.json"
+          GENERATED_FILE="${{ steps.fetch_script.outputs.output_file }}"
+          
+          if [ ! -f "$GENERATED_FILE" ] || [ ! -s "$GENERATED_FILE" ]; then
+            echo "Error: Generated file $GENERATED_FILE is missing or empty. Skipping commit."
+            echo "info_file_path=${INFO_FILE_IN_REPO}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          mv "$GENERATED_FILE" "./${INFO_FILE_IN_REPO}"
+
+          git config --global user.name 'GitHub Action Bot'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          if git diff --quiet "./${INFO_FILE_IN_REPO}"; then
+            echo "No changes to ${INFO_FILE_IN_REPO}. Nothing to commit."
+          else
+            git add "./${INFO_FILE_IN_REPO}"
+            git commit -m "Update ImmortalWrt version info - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            ATTEMPTS=0
+            MAX_ATTEMPTS=3
+            until git push || [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; do
+              ATTEMPTS=$((ATTEMPTS + 1))
+              echo "Push attempt $ATTEMPTS failed. Retrying in 10 seconds..."
+              sleep 10
+              git fetch
+              git rebase origin/${GITHUB_REF##*/} || git rebase --abort
+            done
+            if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
+              echo "Failed to push after $MAX_ATTEMPTS attempts."
+              exit 1
+            fi
+            echo "Committed and pushed updated ${INFO_FILE_IN_REPO}"
+          fi
+          echo "info_file_path=${INFO_FILE_IN_REPO}" >> $GITHUB_OUTPUT
