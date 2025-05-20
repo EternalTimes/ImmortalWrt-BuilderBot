@@ -168,6 +168,14 @@ jobs:
           echo "artifact_path=${ARTIFACT_DIR}" >> $GITHUB_OUTPUT
         working-directory: ${{ github.workspace }}
 
+      - name: List Generated Files for Debugging
+        working-directory: ${{ github.workspace }}/imagebuilder/bin/targets/rockchip/armv8
+        run: |
+          echo "Listing files in ${{ github.workspace }}/imagebuilder/bin/targets/rockchip/armv8:"
+          ls -Ralh
+          echo "Current EXTRA_IMAGE_NAME_SUFFIX was: -${{ env.SANITIZED_PROFILES_FOR_SUFFIX }}-${{ env.CURRENT_DATE_FOR_SUFFIX }}${{ env.EXTRA_SUFFIX_PART_STABILITY }}${{ env.EXTRA_SUFFIX_PART_CUSTOM }}"
+          
+
       - name: Upload firmware to Release
         uses: softprops/action-gh-release@v1
         with:
