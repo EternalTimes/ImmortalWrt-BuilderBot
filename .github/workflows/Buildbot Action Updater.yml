@@ -18,21 +18,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Ensure python3 is present
-        run: sudo apt update && sudo apt install -y python3
-
-      - name: Run profile and stability parser
-        run: python3 .github/scripts/update_workflow_inputs.py
-
-      - name: Patch Rockchip armv8.yml with new device_profiles and stability options
+      - name: Ensure python3 & pyyaml
         run: |
-          cp ".github/workflows/Rockchip armv8.yml" Rockchip_armv8.bak
+          sudo apt update && sudo apt install -y python3-pip
+          pip3 install pyyaml
 
-          # 替换 device_profiles options
-          awk '/device_profiles:/ {print;flag=1;next} flag && /options:/ {print;getline;while($0~/^ +-/){getline};flag=0;system("cat profile_options.txt");next} 1' Rockchip_armv8.bak > tmp1.yml
-
-          # 替换 build_stability options
-          awk '/build_stability:/ {print;flag=1;next} flag && /options:/ {print;getline;while($0~/^ +-/){getline};flag=0;system("cat stability_options.txt");next} 1' tmp1.yml > ".github/workflows/Rockchip armv8.yml"
+      - name: Run workflow menu updater
+        run: python3 .github/scripts/update_workflow_inputs.py
 
       - name: Create Pull Request for workflow update
         uses: peter-evans/create-pull-request@v7
