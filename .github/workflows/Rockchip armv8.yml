@@ -1,0 +1,192 @@
+name: Build ImmortalWrt (rockchip/armv8)
+
+on:
+  workflow_dispatch:
+    inputs:
+      device_profiles:
+        description: '设备 Profile 名称 (单个或多个，用空格分隔)'
+        type: string
+        required: true
+        default: 'friendlyarm_nanopi-r2s' # 示例, 修改为你常用的设备
+      rootfs_size_mb:
+        description: 'RootFS 大小 (MB), 例如 256'
+        type: string # string 类型也适用于数字输入
+        required: true
+        default: '8192'
+      custom_packages:
+        description: '自定义软件包列表 (用空格分隔, 前缀 "-" 表示移除默认包)'
+        type: string
+        required: false
+        default: 'luci luci-app-firewall luci-app-opkg luci-base luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-theme-bootstrap block-mount kmod-fs-ext4 kmod-usb-storage kmod-usb-storage-uas kmod-usb-ohci kmod-usb-uhci kmod-usb3 dosfstools e2fsprogs fdisk'
+      imagebuilder_url:
+        description: 'ImmortalWrt ImageBuilder 下载地址 (rockchip/armv8)'
+        type: string
+        required: true
+        default: 'https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/immortalwrt-imagebuilder-rockchip-armv8.Linux-x86_64.tar.xz'
+      release_tag_suffix:
+        description: 'Release 标签的自定义后缀 (可选)'
+        type: string
+        required: false
+        default: ''
+
+      build_stability:
+        description: '选择构建的稳定性偏好 (示例参数)'
+        type: choice
+        required: false
+        default: 'snapshot'
+        options:
+          - snapshot  # 日常快常用
+          - testing   # 测试阶段
+          - stable_candidate # 稳定候选
+      enable_verbose_script_log:
+        description: '是否为本Action脚本启用更详细的日志? (示例参数)'
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  build_firmware:
+    runs-on: ubuntu-latest
+    name: Build Firmware for ${{ github.event.inputs.device_profiles }}
+
+    steps:
+      - name: Checkout code (optional, if you have scripts in your repo)
+        uses: actions/checkout@v4
+
+      - name: Display selected input parameters (示例)
+        run: |
+          echo "--- User Selected Parameters ---"
+          echo "Device Profiles: ${{ github.event.inputs.device_profiles }}"
+          echo "RootFS Size (MB): ${{ github.event.inputs.rootfs_size_mb }}"
+          echo "Custom Packages: ${{ github.event.inputs.custom_packages }}"
+          echo "ImageBuilder URL: ${{ github.event.inputs.imagebuilder_url }}"
+          echo "Release Tag Suffix: ${{ github.event.inputs.release_tag_suffix }}"
+          echo "Build Stability Preference: ${{ github.event.inputs.build_stability }}"
+          echo "Enable Verbose Script Log: ${{ github.event.inputs.enable_verbose_script_log }}"
+          echo "--------------------------------"
+          if [ "${{ github.event.inputs.enable_verbose_script_log }}" == "true" ]; then
+            echo "Verbose script logging is ON for this workflow run."
+            # 在后续脚本中可以根据此变量 set -x
+          fi
+
+      - name: Set up environment and install dependencies
+        run: |
+          echo "Setting up environment..."
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential libncurses5-dev libncursesw5-dev \
+            zlib1g-dev gawk git gettext libssl-dev xsltproc \
+            rsync wget unzip file ccache
+          echo "Environment setup complete."
+
+      - name: Configure ccache
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/ccache
+          ccache -M 5G # Set max ccache size
+          echo "CCACHE_DIR=$GITHUB_WORKSPACE/ccache" >> $GITHUB_ENV
+          echo "USE_CCACHE=1" >> $GITHUB_ENV
+
+      - name: Download and extract ImmortalWrt ImageBuilder
+        run: |
+          echo "Downloading ImageBuilder from ${{ github.event.inputs.imagebuilder_url }}"
+          wget -qO immortalwrt-imagebuilder.tar.xz "${{ github.event.inputs.imagebuilder_url }}"
+          mkdir -p imagebuilder
+          echo "Extracting ImageBuilder..."
+          tar -Jxf immortalwrt-imagebuilder.tar.xz -C imagebuilder --strip-components=1
+          echo "ImageBuilder extracted."
+        working-directory: ${{ github.workspace }}
+
+      - name: Prepare build environment (cache, clean)
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          echo "Cleaning previous build (if any)..."
+          make clean || true
+
+      - name: Build firmware
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          echo "Starting firmware build..."
+          PACKAGES_TO_BUILD="${{ github.event.inputs.custom_packages }}"
+          if [ -z "$PACKAGES_TO_BUILD" ]; then
+            echo "No custom packages specified. Using ImageBuilder defaults."
+            PACKAGES_ARG=""
+          else
+            echo "Custom packages: $PACKAGES_TO_BUILD"
+            PACKAGES_ARG="PACKAGES=\"$PACKAGES_TO_BUILD\""
+          fi
+
+          ROOTFS_SIZE_ARG="CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}"
+          PROFILES_ARG="PROFILES=\"${{ github.event.inputs.device_profiles }}\""
+          
+          CURRENT_DATE=$(date +%Y%m%d)
+          SANITIZED_PROFILES=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_')
+          EXTRA_SUFFIX="-${SANITIZED_PROFILES}-${CURRENT_DATE}"
+          if [ -n "${{ github.event.inputs.release_tag_suffix }}" ]; then
+            EXTRA_SUFFIX="${EXTRA_SUFFIX}-${{ github.event.inputs.release_tag_suffix }}"
+          fi
+          # 根据示例参数调整后缀 (可选的演示)
+          if [ "${{ github.event.inputs.build_stability }}" != "snapshot" ]; then
+            EXTRA_SUFFIX="${EXTRA_SUFFIX}-${{ github.event.inputs.build_stability }}"
+          fi
+          EXTRA_IMAGE_NAME_SUFFIX_ARG="EXTRA_IMAGE_NAME_SUFFIX=${EXTRA_SUFFIX}"
+
+          BUILD_COMMAND="make image -j$(nproc) $PROFILES_ARG $PACKAGES_ARG $ROOTFS_SIZE_ARG $EXTRA_IMAGE_NAME_SUFFIX_ARG V=s"
+          echo "Build command: $BUILD_COMMAND"
+          eval $BUILD_COMMAND
+          echo "Firmware build completed."
+
+      - name: Prepare artifacts for release
+        id: prepare_artifacts
+        run: |
+          echo "Preparing artifacts..."
+          ARTIFACT_DIR="${{ github.workspace }}/imagebuilder/bin/targets/rockchip/armv8"
+          if [ ! -d "$ARTIFACT_DIR" ] || [ -z "$(ls -A $ARTIFACT_DIR)" ]; then
+            echo "Error: Artifact directory $ARTIFACT_DIR is empty or does not exist."
+            exit 1
+          fi
+          cd $ARTIFACT_DIR
+          ls -lh
+
+          CURRENT_DATE_TAG=$(date +%Y.%m.%d)
+          SANITIZED_PROFILES_TAG=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_' | tr -cs 'a-zA-Z0-9_.-' '_' | cut -c1-50)
+          RELEASE_TAG="immortalwrt-${SANITIZED_PROFILES_TAG}-${CURRENT_DATE_TAG}"
+          if [ -n "${{ github.event.inputs.release_tag_suffix }}" ]; then
+            RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.release_tag_suffix }}"
+          fi
+          if [ "${{ github.event.inputs.build_stability }}" != "snapshot" ]; then
+            RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.build_stability }}"
+          fi
+          RELEASE_TAG=$(echo "$RELEASE_TAG" | tr -cs 'a-zA-Z0-9_.-' '_')
+
+          echo "Release tag: $RELEASE_TAG"
+          echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+          echo "artifact_path=${ARTIFACT_DIR}" >> $GITHUB_OUTPUT
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload firmware to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.prepare_artifacts.outputs.release_tag }}
+          name: "ImmortalWrt ${{ steps.prepare_artifacts.outputs.release_tag }} (rockchip/armv8)"
+          body: |
+            ImmortalWrt firmware compiled via GitHub Actions.
+            **Target:** rockchip/armv8
+            **Device Profile(s):** ${{ github.event.inputs.device_profiles }}
+            **RootFS Size:** ${{ github.event.inputs.rootfs_size_mb }}MB
+            **Custom Packages:** `${{ github.event.inputs.custom_packages }}`
+            **Build Stability Preference:** ${{ github.event.inputs.build_stability }}
+            **ImageBuilder URL:** ${{ github.event.inputs.imagebuilder_url }}
+            **Workflow Run ID:** ${{ github.run_id }}
+            **Commit:** ${{ github.sha }}
+          files: |
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.img.gz
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.img
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.manifest
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/sha250*
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/sha256sums
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/version.buildinfo
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/config.buildinfo
+            ${{ steps.prepare_artifacts.outputs.artifact_path }}/feeds.buildinfo
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
