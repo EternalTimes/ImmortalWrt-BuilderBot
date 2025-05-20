@@ -1,5 +1,8 @@
 name: Update Rockchip armv8 Workflow Inputs
 
+permissions:
+  contents: write
+
 on:
   push:
     paths:
