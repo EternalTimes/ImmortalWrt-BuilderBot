@@ -131,10 +131,11 @@ jobs:
           git config --global user.name 'GitHub Action Bot'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
-          if git diff --quiet "./${INFO_FILE_IN_REPO}"; then
+          git add "./${INFO_FILE_IN_REPO}"
+
+          if git diff --cached --quiet; then
             echo "No changes to ${INFO_FILE_IN_REPO}. Nothing to commit."
           else
-            git add "./${INFO_FILE_IN_REPO}"
             git commit -m "Update ImmortalWrt version info - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
             ATTEMPTS=0
             MAX_ATTEMPTS=3
