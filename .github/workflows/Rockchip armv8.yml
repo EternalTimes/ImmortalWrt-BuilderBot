@@ -9,7 +9,52 @@ on:
         required: true
         default: "friendlyarm_nanopi-r2s"
         options:
-          - friendlyarm_nanopi-r2s  # 这里会自动生成
+          - ariaboard_photonicat
+          - armsom_sige3
+          - armsom_sige7
+          - cyber_cyber3588-aib
+          - ezpro_mrkaio-m68s
+          - firefly_roc-rk3328-cc
+          - firefly_roc-rk3568-pc
+          - friendlyarm_nanopc-t4
+          - friendlyarm_nanopc-t6
+          - friendlyarm_nanopi-r2c
+          - friendlyarm_nanopi-r2c-plus
+          - friendlyarm_nanopi-r2s
+          - friendlyarm_nanopi-r3s
+          - friendlyarm_nanopi-r4s
+          - friendlyarm_nanopi-r4s-enterprise
+          - friendlyarm_nanopi-r4se
+          - friendlyarm_nanopi-r5c
+          - friendlyarm_nanopi-r5s
+          - friendlyarm_nanopi-r6c
+          - friendlyarm_nanopi-r6s
+          - huake_guangmiao-g4c
+          - lunzn_fastrhino-r66s
+          - lunzn_fastrhino-r68s
+          - lyt_t68m
+          - mmbox_anas3035
+          - pine64_rock64
+          - pine64_rockpro64
+          - radxa_cm3-io
+          - radxa_e25
+          - radxa_rock-3a
+          - radxa_rock-3b
+          - radxa_rock-3c
+          - radxa_rock-4c-plus
+          - radxa_rock-4se
+          - radxa_rock-5a
+          - radxa_rock-5b
+          - radxa_rock-pi-4a
+          - radxa_rock-pi-e
+          - radxa_rock-pi-s
+          - radxa_zero-3e
+          - radxa_zero-3w
+          - sinovoip_bpi-r2-pro
+          - xunlong_orangepi-5
+          - xunlong_orangepi-5-plus
+          - xunlong_orangepi-r1-plus
+          - xunlong_orangepi-r1-plus-lts
       build_stability:
         description: "选择系统类型"
         type: choice
@@ -47,8 +92,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Firmware for ${{ github.event.inputs.device_profiles }}
     env:
-      SNAPSHOT_IMAGEBUILDER_URL: ""   # update_workflow_inputs.py 自动写入
-      STABLE_IMAGEBUILDER_URL: ""     # update_workflow_inputs.py 自动写入
+      SNAPSHOT_IMAGEBUILDER_URL: "https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/immortalwrt-imagebuilder-rockchip-armv8.Linux-x86_64.tar.zst"
+      STABLE_IMAGEBUILDER_URL: "https://downloads.immortalwrt.org/releases/24.10.1/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.1-rockchip-armv8.Linux-x86_64.tar.zst"
 
     steps:
       - name: Checkout repository
