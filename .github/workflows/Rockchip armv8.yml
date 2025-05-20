@@ -22,7 +22,7 @@ on:
         description: 'ImmortalWrt ImageBuilder 下载地址 (rockchip/armv8)'
         type: string
         required: true
-        default: 'https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/immortalwrt-imagebuilder-rockchip-armv8.Linux-x86_64.tar.xz'
+        default: 'https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/immortalwrt-imagebuilder-rockchip-armv8.Linux-x86_64.tar.zst'
       release_tag_suffix:
         description: 'Release 标签的自定义后缀 (可选)'
         type: string
@@ -89,10 +89,15 @@ jobs:
       - name: Download and extract ImmortalWrt ImageBuilder
         run: |
           echo "Downloading ImageBuilder from ${{ github.event.inputs.imagebuilder_url }}"
-          wget -qO immortalwrt-imagebuilder.tar.xz "${{ github.event.inputs.imagebuilder_url }}"
+          wget -qO immortalwrt-imagebuilder.tar.zst "${{ github.event.inputs.imagebuilder_url }}" # <<< MODIFIED: .tar.zst
           mkdir -p imagebuilder
           echo "Extracting ImageBuilder..."
-          tar -Jxf immortalwrt-imagebuilder.tar.xz -C imagebuilder --strip-components=1
+          # Use tar with zstd support, or zstd decompress then tar extract
+          # Modern tar versions support --zstd directly
+          tar --zstd -xf immortalwrt-imagebuilder.tar.zst -C imagebuilder --strip-components=1 # <<< MODIFIED
+          # Alternative if tar --zstd is not available (less likely on ubuntu-latest):
+          # zstd -d immortalwrt-imagebuilder.tar.zst -o immortalwrt-imagebuilder.tar
+          # tar -xf immortalwrt-imagebuilder.tar -C imagebuilder --strip-components=1
           echo "ImageBuilder extracted."
         working-directory: ${{ github.workspace }}
 
