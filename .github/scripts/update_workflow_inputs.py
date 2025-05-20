@@ -1,36 +1,45 @@
 import yaml
 import json
+import re
+import os
 
-# 读取 immortalwrt_info.json
+workflow_path = '.github/workflows/Rockchip armv8.yml'
+
+# 1. 读取 profiles、url 等
 with open('immortalwrt_info.json', encoding='utf-8') as f:
-    data = json.load(f)
+    info = json.load(f)
+profiles = sorted(set(info.get('snapshots', {}).get('profiles', []) + info.get('latest_stable', {}).get('profiles', [])))
+snapshot_url = info.get('snapshots', {}).get('imagebuilder_url', '')
+stable_url = info.get('latest_stable', {}).get('imagebuilder_url', '')
 
-# 获取 snapshot 和 stable profiles
-snapshot_profiles = data.get('snapshots', {}).get('profiles', [])
-stable_profiles = data.get('latest_stable', {}).get('profiles', [])
-all_profiles = sorted(set(snapshot_profiles + stable_profiles))
-
-# 获取 imagebuilder url
-snapshot_ib_url = data.get('snapshots', {}).get('imagebuilder_url', '')
-stable_ib_url = data.get('latest_stable', {}).get('imagebuilder_url', '')
-
-# 读取 workflow yml
-with open('.github/workflows/Rockchip armv8.yml', encoding='utf-8') as f:
-    workflow = yaml.safe_load(f)
-
-# 更新 device_profiles 菜单
-inputs = workflow['on']['workflow_dispatch']['inputs']
-if 'device_profiles' in inputs:
-    inputs['device_profiles']['options'] = all_profiles
-
-# 更新 url 变量（写入 jobs.build_firmware.env 内，确保后续 steps 可直接用）
-if 'jobs' in workflow and 'build_firmware' in workflow['jobs']:
-    job = workflow['jobs']['build_firmware']
-    if 'env' not in job:
-        job['env'] = {}
-    job['env']['SNAPSHOT_IMAGEBUILDER_URL'] = snapshot_ib_url
-    job['env']['STABLE_IMAGEBUILDER_URL'] = stable_ib_url
-
-# 保存回 workflow
-with open('.github/workflows/Rockchip armv8.yml', 'w', encoding='utf-8') as f:
-    yaml.dump(workflow, f, allow_unicode=True, sort_keys=False)
+# 2. 先用 PyYAML 尝试解析
+try:
+    with open(workflow_path, encoding='utf-8') as f:
+        data = yaml.safe_load(f)
+    if True in data and 'workflow_dispatch' in data[True]:  # 'on' 被错误识别成 True
+        raise ValueError("on parsed as True")
+    # 正常情况，继续原有yaml处理
+    ... # 你的原有流程
+except Exception as e:
+    # YAML 失败，降级为正则文本操作
+    with open(workflow_path, encoding='utf-8') as f:
+        text = f.read()
+    # 替换 device_profiles
+    text = re.sub(
+        r'(device_profiles:\s*[\s\S]+?options:\s*\n)(\s*-.*\n)+',
+        lambda m: f"{m.group(1)}" + ''.join([f"          - {p}\n" for p in profiles]),
+        text
+    )
+    # 替换 env 部分 snapshot/stable url
+    text = re.sub(
+        r'(SNAPSHOT_IMAGEBUILDER_URL:\s*).*',
+        f'\\1"{snapshot_url}"',
+        text
+    )
+    text = re.sub(
+        r'(STABLE_IMAGEBUILDER_URL:\s*).*',
+        f'\\1"{stable_url}"',
+        text
+    )
+    with open(workflow_path, 'w', encoding='utf-8') as f:
+        f.write(text)
