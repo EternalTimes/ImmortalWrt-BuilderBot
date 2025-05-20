@@ -51,11 +51,11 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-05-20T08:57:40.328984Z"
+    "last_updated": "2025-05-20T09:07:07.754039Z"
   },
   "stable_24_10_1": {
     "version_name": "24.10.1",
-    "imagebuilder_url": null,
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.1/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.1-rockchip-armv8.Linux-x86_64.tar.zst",
     "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.1/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "ariaboard_photonicat",
@@ -103,11 +103,11 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-05-20T08:57:40.874851Z"
+    "last_updated": "2025-05-20T09:07:08.944963Z"
   },
   "latest_stable": {
     "version_name": "24.10.1",
-    "imagebuilder_url": null,
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.1/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.1-rockchip-armv8.Linux-x86_64.tar.zst",
     "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.1/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "ariaboard_photonicat",
@@ -155,6 +155,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-05-20T08:57:40.874851Z"
+    "last_updated": "2025-05-20T09:07:08.944963Z"
   }
 }
