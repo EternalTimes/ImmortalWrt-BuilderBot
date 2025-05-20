@@ -167,6 +167,15 @@ jobs:
           eval $BUILD_COMMAND
           echo "Firmware build completed."
 
+      - name: Collect images from tmp to bin dir
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          mkdir -p ./bin/targets/rockchip/armv8
+          find ./build_dir/ -type f -name '*.img*' -exec cp {} ./bin/targets/rockchip/armv8/ \;
+          find ./build_dir/ -type f -name '*.manifest' -exec cp {} ./bin/targets/rockchip/armv8/ \;
+          find ./build_dir/ -type f -name '*buildinfo' -exec cp {} ./bin/targets/rockchip/armv8/ \;
+
+
       - name: Prepare artifacts for release
         id: prepare_artifacts
         run: |
