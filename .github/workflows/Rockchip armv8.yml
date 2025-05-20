@@ -154,7 +154,7 @@ jobs:
           PACKAGES_TO_BUILD="${{ github.event.inputs.custom_packages }}"
           [ -z "$PACKAGES_TO_BUILD" ] && PACKAGES_ARG="" || PACKAGES_ARG="PACKAGES=\"$PACKAGES_TO_BUILD\""
           ROOTFS_SIZE_ARG="CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}"
-          PROFILES_ARG="PROFILES=\"${{ github.event.inputs.device_profiles }}\""
+          PROFILES_ARG="PROFILE=\"${{ github.event.inputs.device_profiles }}\""
           CURRENT_DATE=$(date +%Y%m%d)
           SANITIZED_PROFILES=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_')
           EXTRA_SUFFIX="-${SANITIZED_PROFILES}-${CURRENT_DATE}"
