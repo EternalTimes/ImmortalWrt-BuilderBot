@@ -35,8 +35,9 @@ jobs:
           awk '/build_stability:/ {print;flag=1;next} flag && /options:/ {print;getline;while($0~/^ +-/){getline};flag=0;system("cat stability_options.txt");next} 1' tmp1.yml > ".github/workflows/Rockchip armv8.yml"
 
       - name: Create Pull Request for workflow update
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
+          token:  ${{ secrets.WORKFLOW_WRITE_TOKEN }}
           commit-message: "chore: 自动更新 device_profiles 和 build_stability 选项 (来自 immortalwrt_info.json)"
           title: "chore: 自动更新 Rockchip armv8 workflow 设备/稳定性下拉菜单"
           body: |
