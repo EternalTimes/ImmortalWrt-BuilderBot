@@ -1,10 +1,10 @@
 name: Update Rockchip armv8 Workflow Inputs
 
 on:
-  workflow_dispatch:
   push:
     paths:
       - 'immortalwrt_info.json'
+  workflow_dispatch:
 
 jobs:
   update_workflow:
