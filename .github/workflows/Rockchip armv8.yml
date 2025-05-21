@@ -149,14 +149,20 @@ jobs:
         working-directory: ${{ github.workspace }}/imagebuilder
         run: |
           make clean || true
-
+      
+      - name: Set RootFS size in .config
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          sed -i "s/^CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}/" .config
+          grep -q "^CONFIG_TARGET_ROOTFS_PARTSIZE=" .config || echo "CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}" >> .config
+          grep CONFIG_TARGET_ROOTFS_PARTSIZE .config
+  
       - name: Build firmware
         working-directory: ${{ github.workspace }}/imagebuilder
         run: |
           echo "Starting firmware build..."
           PACKAGES_TO_BUILD="${{ github.event.inputs.custom_packages }}"
           [ -z "$PACKAGES_TO_BUILD" ] && PACKAGES_ARG="" || PACKAGES_ARG="PACKAGES=\"$PACKAGES_TO_BUILD\""
-          ROOTFS_SIZE_ARG="CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}"
           PROFILES_ARG="PROFILE=\"${{ github.event.inputs.device_profiles }}\""
           CURRENT_DATE=$(date +%Y%m%d)
           SANITIZED_PROFILES=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_')
@@ -165,7 +171,7 @@ jobs:
             EXTRA_SUFFIX="${EXTRA_SUFFIX}-${{ github.event.inputs.release_tag_suffix }}"
           fi
           EXTRA_IMAGE_NAME_SUFFIX_ARG="EXTRA_IMAGE_NAME_SUFFIX=${EXTRA_SUFFIX}"
-          BUILD_COMMAND="make image -j$(nproc) $PROFILES_ARG $PACKAGES_ARG $ROOTFS_SIZE_ARG $EXTRA_IMAGE_NAME_SUFFIX_ARG V=s"
+          BUILD_COMMAND="make image -j$(nproc) $PROFILES_ARG $ROOTFS_SIZE_ARG $EXTRA_IMAGE_NAME_SUFFIX_ARG V=s"
           echo "Build command: $BUILD_COMMAND"
           eval $BUILD_COMMAND
           echo "Firmware build completed."
