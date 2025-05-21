@@ -68,6 +68,21 @@ on:
         type: string
         required: true
         default: "8192"
+      preinit_ip:
+        description: "预设IP地址"
+        type: string
+        required: true
+        default: "192.168.1.1"
+      preinit_netmask:
+        description: "预设子网掩码"
+        type: string
+        required: true
+        default: "255.255.255.0"
+      preinit_broadcast:
+        description: "预设广播地址"
+        type: string
+        required: true
+        default: "192.168.1.255"
       custom_packages:
         description: "自定义包（空格分隔，'-'前缀移除默认包）"
         type: string
@@ -150,12 +165,22 @@ jobs:
         run: |
           make clean || true
       
-      - name: Set RootFS size in .config
+      - name: Set custom .config options (rootfs/ip/netmask/broadcast)
         working-directory: ${{ github.workspace }}/imagebuilder
         run: |
-          sed -i "s/^CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}/" .config
-          grep -q "^CONFIG_TARGET_ROOTFS_PARTSIZE=" .config || echo "CONFIG_TARGET_ROOTFS_PARTSIZE=${{ github.event.inputs.rootfs_size_mb }}" >> .config
-          grep CONFIG_TARGET_ROOTFS_PARTSIZE .config
+          set_config() {
+            local key="$1"
+            local value="$2"
+            grep -q "^${key}=" .config && \
+              sed -i "s|^${key}=.*|${key}=${value}|" .config || \
+              echo "${key}=${value}" >> .config
+          }
+          set_config CONFIG_TARGET_ROOTFS_PARTSIZE "${{ github.event.inputs.rootfs_size_mb }}"
+          set_config CONFIG_TARGET_PREINIT_IP "\"${{ github.event.inputs.preinit_ip }}\""
+          set_config CONFIG_TARGET_PREINIT_NETMASK "\"${{ github.event.inputs.preinit_netmask }}\""
+          set_config CONFIG_TARGET_PREINIT_BROADCAST "\"${{ github.event.inputs.preinit_broadcast }}\""
+          grep -E 'CONFIG_TARGET_ROOTFS_PARTSIZE|CONFIG_TARGET_PREINIT_IP|CONFIG_TARGET_PREINIT_NETMASK|CONFIG_TARGET_PREINIT_BROADCAST' .config
+
   
       - name: Build firmware
         working-directory: ${{ github.workspace }}/imagebuilder
