@@ -250,8 +250,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.WORKFLOW_WRITE_TOKEN }}
-          tag_name: ${{ steps.prepare_release.outputs.release_tag }}
-          name: ${{ steps.prepare_release.outputs.release_title }}
+          tag_name: ${{ steps.prepare_artifacts.outputs.release_tag }}
+          name: ${{ steps.prepare_artifacts.outputs.release_title }}
           body: |
             ImmortalWrt firmware compiled via GitHub Actions.
 
