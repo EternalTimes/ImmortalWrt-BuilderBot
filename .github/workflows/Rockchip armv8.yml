@@ -209,7 +209,6 @@ jobs:
           find ./build_dir/ -type f -name '*.manifest' -exec cp {} ./bin/targets/rockchip/armv8/ \;
           find ./build_dir/ -type f -name '*buildinfo' -exec cp {} ./bin/targets/rockchip/armv8/ \;
 
-
       - name: Prepare artifacts for release
         id: prepare_artifacts
         run: |
@@ -218,23 +217,27 @@ jobs:
             echo "Error: Artifact directory $ARTIFACT_DIR is empty or does not exist."
             exit 1
           fi
-          cd $ARTIFACT_DIR
+          cd "$ARTIFACT_DIR"
           ls -lh
 
-          CURRENT_DATE_TAG=$(date +%Y.%m.%d)
-          SANITIZED_PROFILES_TAG=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_' | tr -cs 'a-zA-Z0-9_.-' '_' | cut -c1-50)
-          RELEASE_TAG="immortalwrt-${SANITIZED_PROFILES_TAG}-${CURRENT_DATE_TAG}"
-          if [ -n "${{ github.event.inputs.release_tag_suffix }}" ]; then
-            RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.release_tag_suffix }}"
-          fi
-          if [ "${{ github.event.inputs.build_stability }}" != "snapshot" ]; then
-            RELEASE_TAG="${RELEASE_TAG}-${{ github.event.inputs.build_stability }}"
-          fi
-          RELEASE_TAG=$(echo "$RELEASE_TAG" | tr -cs 'a-zA-Z0-9_.-' '_')
+          # 获取当前日期和时间
+          NOW="$(date '+%Y-%m-%d %H:%M')"
+          SANITIZED_PROFILES=$(echo "${{ github.event.inputs.device_profiles }}" | tr ' ' '_' | tr -cs 'a-zA-Z0-9_.-' '_' | cut -c1-50)
+          STABILITY="${{ github.event.inputs.build_stability }}"
+          [ "$STABILITY" = "snapshot" ] && STABILITY="Snapshot" || STABILITY="Stable"
+          SUFFIX="${{ github.event.inputs.release_tag_suffix }}"
+          # 组装 Release Tag（日期时间在前）
+          RELEASE_TAG="${NOW//[: ]/-}_ImmortalWrt_${SANITIZED_PROFILES}_${STABILITY}"
+          [ -n "$SUFFIX" ] && RELEASE_TAG="${RELEASE_TAG}_$SUFFIX"
+
+          # 标题（给 release 用，也方便后续 body 展示）
+          RELEASE_TITLE="${NOW} ImmortalWrt ${SANITIZED_PROFILES} ${STABILITY}"
 
           echo "Release tag: $RELEASE_TAG"
+          echo "Release title: $RELEASE_TITLE"
           echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
-          echo "artifact_path=${ARTIFACT_DIR}" >> $GITHUB_OUTPUT
+          echo "release_title=${RELEASE_TITLE}" >> $GITHUB_OUTPUT
+          echo "artifact_path=$ARTIFACT_DIR" >> $GITHUB_OUTPUT
         working-directory: ${{ github.workspace }}
 
       - name: List Generated Files for Debugging
@@ -246,19 +249,32 @@ jobs:
       - name: Upload firmware to Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.WORKFLOW_WRITE_TOKEN }}  # ★ 用你的 PAT
-          tag_name: ${{ steps.prepare_artifacts.outputs.release_tag }}
-          name: "ImmortalWrt ${{ steps.prepare_artifacts.outputs.release_tag }} (rockchip/armv8)"
+          token: ${{ secrets.WORKFLOW_WRITE_TOKEN }}
+          tag_name: ${{ steps.prepare_release.outputs.release_tag }}
+          name: ${{ steps.prepare_release.outputs.release_title }}
           body: |
             ImmortalWrt firmware compiled via GitHub Actions.
+
+            **Build Date:** ${{ steps.prepare_release.outputs.release_title }}
             **Target:** rockchip/armv8
-            **Device Profile(s):** ${{ github.event.inputs.device_profiles }}
-            **RootFS Size:** ${{ github.event.inputs.rootfs_size_mb }}MB
-            **Custom Packages:** `${{ github.event.inputs.custom_packages }}`
-            **Build Stability Preference:** ${{ github.event.inputs.build_stability }}
+            **Device Profile:** ${{ github.event.inputs.device_profiles }}
+            **RootFS Size:** ${{ github.event.inputs.rootfs_size_mb }} MB
+            **Build Stability:** ${{ github.event.inputs.build_stability }}
             **ImageBuilder URL:** ${{ env.IMAGEBUILDER_URL }}
+
+            **Preinit Network Settings**
+            - **IP Address:** ${{ github.event.inputs.preinit_ip }}
+            - **Netmask:** ${{ github.event.inputs.preinit_netmask }}
+            - **Broadcast:** ${{ github.event.inputs.preinit_broadcast }}
+
+            **Custom Packages:**
+            ```
+            ${{ github.event.inputs.custom_packages }}
+            ```
+
             **Workflow Run ID:** ${{ github.run_id }}
             **Commit:** ${{ github.sha }}
+
           files: |
             ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.img.gz
             ${{ steps.prepare_artifacts.outputs.artifact_path }}/*.img
