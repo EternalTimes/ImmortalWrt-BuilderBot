@@ -184,7 +184,7 @@ jobs:
   
       - name: Build firmware with auto filter
         working-directory: ${{ github.workspace }}/imagebuilder
-        run: bash ../../.github/scripts/build_with_filter.sh
+        run: bash .github/scripts/build_with_filter.sh
 
           
       - name: Collect images from tmp to bin dir
