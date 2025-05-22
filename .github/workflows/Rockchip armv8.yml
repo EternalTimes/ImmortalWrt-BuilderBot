@@ -196,11 +196,11 @@ jobs:
             EXTRA_SUFFIX="${EXTRA_SUFFIX}-${{ github.event.inputs.release_tag_suffix }}"
           fi
           EXTRA_IMAGE_NAME_SUFFIX_ARG="EXTRA_IMAGE_NAME_SUFFIX=${EXTRA_SUFFIX}"
-          BUILD_COMMAND="make image -j$(nproc) $PROFILES_ARG $ROOTFS_SIZE_ARG $EXTRA_IMAGE_NAME_SUFFIX_ARG V=s"
+          BUILD_COMMAND="make image -j$(nproc) $PROFILES_ARG $PACKAGES_ARG $EXTRA_IMAGE_NAME_SUFFIX_ARG V=s"
           echo "Build command: $BUILD_COMMAND"
-          eval $BUILD_COMMAND
+          eval "$BUILD_COMMAND"
           echo "Firmware build completed."
-
+          
       - name: Collect images from tmp to bin dir
         working-directory: ${{ github.workspace }}/imagebuilder
         run: |
