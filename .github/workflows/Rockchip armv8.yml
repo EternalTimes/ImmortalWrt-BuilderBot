@@ -184,6 +184,10 @@ jobs:
   
       - name: Build firmware with auto filter
         working-directory: ${{ github.workspace }}/imagebuilder
+        env:
+          CUSTOM_PACKAGES: ${{ github.event.inputs.custom_packages }}
+          DEVICE_PROFILES: ${{ github.event.inputs.device_profiles }}
+          RELEASE_TAG_SUFFIX: ${{ github.event.inputs.release_tag_suffix }}
         run: bash ../.github/scripts/build_with_filter.sh
 
           

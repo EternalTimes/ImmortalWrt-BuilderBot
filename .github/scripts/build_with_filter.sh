@@ -2,9 +2,9 @@
 set -e
 
 # ========== 配置区 ==========
-PACKAGES_TO_BUILD="${{ github.event.inputs.custom_packages }}"
-PROFILES="${{ github.event.inputs.device_profiles }}"
-RELEASE_TAG_SUFFIX="${{ github.event.inputs.release_tag_suffix }}"
+PACKAGES_TO_BUILD="${CUSTOM_PACKAGES}"
+PROFILES="${DEVICE_PROFILES}"
+RELEASE_TAG_SUFFIX="${RELEASE_TAG_SUFFIX}"
 CURRENT_DATE=$(date +%Y%m%d)
 SANITIZED_PROFILES=$(echo "$PROFILES" | tr ' ' '_')
 EXTRA_SUFFIX="-${SANITIZED_PROFILES}-${CURRENT_DATE}"
