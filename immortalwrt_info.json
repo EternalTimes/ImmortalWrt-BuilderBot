@@ -33,13 +33,18 @@
       "pine64_rockpro64",
       "radxa_cm3-io",
       "radxa_e25",
+      "radxa_e52c",
       "radxa_rock-3a",
       "radxa_rock-3b",
       "radxa_rock-3c",
       "radxa_rock-4c-plus",
       "radxa_rock-4se",
+      "radxa_rock-5-itx",
       "radxa_rock-5a",
       "radxa_rock-5b",
+      "radxa_rock-5b-plus",
+      "radxa_rock-5c",
+      "radxa_rock-5t",
       "radxa_rock-pi-4a",
       "radxa_rock-pi-e",
       "radxa_rock-pi-s",
@@ -51,7 +56,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-09-10T02:52:03.123113Z"
+    "last_updated": "2025-09-11T02:57:05.567348Z"
   },
   "stable_24_10_2": {
     "version_name": "24.10.2",
@@ -103,7 +108,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-09-10T02:52:03.663194Z"
+    "last_updated": "2025-09-11T02:57:06.164686Z"
   },
   "latest_stable": {
     "version_name": "24.10.2",
@@ -155,6 +160,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-09-10T02:52:03.663194Z"
+    "last_updated": "2025-09-11T02:57:06.164686Z"
   }
 }
