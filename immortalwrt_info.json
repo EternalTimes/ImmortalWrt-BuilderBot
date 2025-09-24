@@ -56,12 +56,12 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-09-23T02:54:37.328498Z"
+    "last_updated": "2025-09-24T02:57:30.631708Z"
   },
-  "stable_24_10_2": {
-    "version_name": "24.10.2",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.2/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.2-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.2/targets/rockchip/armv8/profiles.json",
+  "stable_24_10_3": {
+    "version_name": "24.10.3",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.3-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "ariaboard_photonicat",
       "armsom_sige3",
@@ -95,6 +95,8 @@
       "radxa_rock-3a",
       "radxa_rock-3b",
       "radxa_rock-3c",
+      "radxa_rock-4c-plus",
+      "radxa_rock-4se",
       "radxa_rock-5a",
       "radxa_rock-5b",
       "radxa_rock-pi-4a",
@@ -108,12 +110,12 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-09-23T02:54:38.103097Z"
+    "last_updated": "2025-09-24T02:57:31.786344Z"
   },
   "latest_stable": {
-    "version_name": "24.10.2",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.2/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.2-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.2/targets/rockchip/armv8/profiles.json",
+    "version_name": "24.10.3",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.3-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "ariaboard_photonicat",
       "armsom_sige3",
@@ -147,6 +149,8 @@
       "radxa_rock-3a",
       "radxa_rock-3b",
       "radxa_rock-3c",
+      "radxa_rock-4c-plus",
+      "radxa_rock-4se",
       "radxa_rock-5a",
       "radxa_rock-5b",
       "radxa_rock-pi-4a",
@@ -160,6 +164,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-09-23T02:54:38.103097Z"
+    "last_updated": "2025-09-24T02:57:31.786344Z"
   }
 }
