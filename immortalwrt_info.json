@@ -38,6 +38,7 @@
       "radxa_rock-3b",
       "radxa_rock-3c",
       "radxa_rock-4c-plus",
+      "radxa_rock-4d",
       "radxa_rock-4se",
       "radxa_rock-5-itx",
       "radxa_rock-5a",
@@ -56,7 +57,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-05T03:03:58.463966Z"
+    "last_updated": "2025-10-06T02:58:18.034520Z"
   },
   "stable_24_10_3": {
     "version_name": "24.10.3",
@@ -110,7 +111,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-05T03:03:59.174844Z"
+    "last_updated": "2025-10-06T02:58:19.278947Z"
   },
   "latest_stable": {
     "version_name": "24.10.3",
@@ -164,6 +165,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-05T03:03:59.174844Z"
+    "last_updated": "2025-10-06T02:58:19.278947Z"
   }
 }
