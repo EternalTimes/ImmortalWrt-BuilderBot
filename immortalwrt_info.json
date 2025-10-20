@@ -24,6 +24,7 @@
       "friendlyarm_nanopi-r5s",
       "friendlyarm_nanopi-r6c",
       "friendlyarm_nanopi-r6s",
+      "friendlyarm_nanopi-r76s",
       "huake_guangmiao-g4c",
       "lunzn_fastrhino-r66s",
       "lunzn_fastrhino-r68s",
@@ -57,7 +58,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-19T03:12:16.135822Z"
+    "last_updated": "2025-10-20T03:11:55.383912Z"
   },
   "stable_24_10_3": {
     "version_name": "24.10.3",
@@ -111,7 +112,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-19T03:12:16.751387Z"
+    "last_updated": "2025-10-20T03:11:56.349847Z"
   },
   "latest_stable": {
     "version_name": "24.10.3",
@@ -165,6 +166,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-19T03:12:16.751387Z"
+    "last_updated": "2025-10-20T03:11:56.349847Z"
   }
 }
