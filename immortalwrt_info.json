@@ -60,12 +60,12 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-28T03:04:14.730150Z"
+    "last_updated": "2025-10-29T03:12:13.081878Z"
   },
-  "stable_24_10_3": {
-    "version_name": "24.10.3",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.3-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/profiles.json",
+  "stable_24_10_4": {
+    "version_name": "24.10.4",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.4-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "ariaboard_photonicat",
       "armsom_sige3",
@@ -92,6 +92,8 @@
       "lunzn_fastrhino-r68s",
       "lyt_t68m",
       "mmbox_anas3035",
+      "ninetripod_x3568-v4",
+      "nlnet_xiguapi-v3",
       "pine64_rock64",
       "pine64_rockpro64",
       "radxa_cm3-io",
@@ -114,12 +116,12 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-28T03:04:15.245274Z"
+    "last_updated": "2025-10-29T03:12:13.645223Z"
   },
   "latest_stable": {
-    "version_name": "24.10.3",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.3-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.3/targets/rockchip/armv8/profiles.json",
+    "version_name": "24.10.4",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.4-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "ariaboard_photonicat",
       "armsom_sige3",
@@ -146,6 +148,8 @@
       "lunzn_fastrhino-r68s",
       "lyt_t68m",
       "mmbox_anas3035",
+      "ninetripod_x3568-v4",
+      "nlnet_xiguapi-v3",
       "pine64_rock64",
       "pine64_rockpro64",
       "radxa_cm3-io",
@@ -168,6 +172,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-10-28T03:04:15.245274Z"
+    "last_updated": "2025-10-29T03:12:13.645223Z"
   }
 }
