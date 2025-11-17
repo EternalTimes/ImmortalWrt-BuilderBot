@@ -4,6 +4,7 @@
     "imagebuilder_url": "https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/immortalwrt-imagebuilder-rockchip-armv8.Linux-x86_64.tar.zst",
     "profiles_json_url": "https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/profiles.json",
     "profiles": [
+      "9tripod_x3568-v4",
       "ariaboard_photonicat",
       "armsom_sige3",
       "armsom_sige7",
@@ -26,17 +27,20 @@
       "friendlyarm_nanopi-r6s",
       "friendlyarm_nanopi-r76s",
       "huake_guangmiao-g4c",
+      "linkease_easepi-r1",
       "lunzn_fastrhino-r66s",
       "lunzn_fastrhino-r68s",
       "lyt_t68m",
       "mmbox_anas3035",
-      "ninetripod_x3568-v4",
       "nlnet_xiguapi-v3",
       "pine64_rock64",
       "pine64_rockpro64",
       "radxa_cm3-io",
+      "radxa_e20c",
       "radxa_e25",
       "radxa_e52c",
+      "radxa_rock-2a",
+      "radxa_rock-2f",
       "radxa_rock-3a",
       "radxa_rock-3b",
       "radxa_rock-3c",
@@ -60,7 +64,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-11-16T03:14:53.255554Z"
+    "last_updated": "2025-11-17T03:12:57.397089Z"
   },
   "stable_24_10_4": {
     "version_name": "24.10.4",
@@ -116,7 +120,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-11-16T03:14:54.187567Z"
+    "last_updated": "2025-11-17T03:13:00.063688Z"
   },
   "latest_stable": {
     "version_name": "24.10.4",
@@ -172,6 +176,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-11-16T03:14:54.187567Z"
+    "last_updated": "2025-11-17T03:13:00.063688Z"
   }
 }
