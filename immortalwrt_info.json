@@ -59,12 +59,13 @@
       "radxa_zero-3e",
       "radxa_zero-3w",
       "sinovoip_bpi-r2-pro",
+      "widora_mangopi-m28k",
       "xunlong_orangepi-5",
       "xunlong_orangepi-5-plus",
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-11-26T03:11:46.288664Z"
+    "last_updated": "2025-11-27T03:08:26.790377Z"
   },
   "stable_24_10_4": {
     "version_name": "24.10.4",
@@ -120,7 +121,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-11-26T03:11:47.087705Z"
+    "last_updated": "2025-11-27T03:08:27.356620Z"
   },
   "latest_stable": {
     "version_name": "24.10.4",
@@ -176,6 +177,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2025-11-26T03:11:47.087705Z"
+    "last_updated": "2025-11-27T03:08:27.356620Z"
   }
 }
