@@ -6,6 +6,7 @@
     "profiles": [
       "9tripod_x3568-v4",
       "ariaboard_photonicat",
+      "ariaboard_photonicat2",
       "armsom_sige3",
       "armsom_sige7",
       "cyber_cyber3588-aib",
@@ -59,13 +60,14 @@
       "radxa_zero-3e",
       "radxa_zero-3w",
       "sinovoip_bpi-r2-pro",
+      "widora_mangopi-m28c",
       "widora_mangopi-m28k",
       "xunlong_orangepi-5",
       "xunlong_orangepi-5-plus",
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-01-06T03:25:48.071988Z"
+    "last_updated": "2026-01-07T03:25:46.191751Z"
   },
   "stable_24_10_4": {
     "version_name": "24.10.4",
@@ -121,7 +123,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-01-06T03:25:49.239187Z"
+    "last_updated": "2026-01-07T03:25:48.162104Z"
   },
   "latest_stable": {
     "version_name": "24.10.4",
@@ -177,6 +179,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-01-06T03:25:49.239187Z"
+    "last_updated": "2026-01-07T03:25:48.162104Z"
   }
 }
