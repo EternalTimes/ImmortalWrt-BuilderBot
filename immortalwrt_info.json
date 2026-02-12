@@ -67,13 +67,14 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-02-11T04:27:07.648935Z"
+    "last_updated": "2026-02-12T04:22:00.257436Z"
   },
-  "stable_24_10_4": {
-    "version_name": "24.10.4",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.4-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/profiles.json",
+  "stable_24_10_5": {
+    "version_name": "24.10.5",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.5-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/profiles.json",
     "profiles": [
+      "9tripod_x3568-v4",
       "ariaboard_photonicat",
       "armsom_sige3",
       "armsom_sige7",
@@ -95,23 +96,28 @@
       "friendlyarm_nanopi-r6c",
       "friendlyarm_nanopi-r6s",
       "huake_guangmiao-g4c",
+      "linkease_easepi-r1",
       "lunzn_fastrhino-r66s",
       "lunzn_fastrhino-r68s",
       "lyt_t68m",
       "mmbox_anas3035",
-      "ninetripod_x3568-v4",
       "nlnet_xiguapi-v3",
       "pine64_rock64",
       "pine64_rockpro64",
       "radxa_cm3-io",
       "radxa_e25",
+      "radxa_e52c",
       "radxa_rock-3a",
       "radxa_rock-3b",
       "radxa_rock-3c",
       "radxa_rock-4c-plus",
       "radxa_rock-4se",
+      "radxa_rock-5-itx",
       "radxa_rock-5a",
       "radxa_rock-5b",
+      "radxa_rock-5b-plus",
+      "radxa_rock-5c",
+      "radxa_rock-5t",
       "radxa_rock-pi-4a",
       "radxa_rock-pi-e",
       "radxa_rock-pi-s",
@@ -123,13 +129,14 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-02-11T04:27:09.735279Z"
+    "last_updated": "2026-02-12T04:22:02.019661Z"
   },
   "latest_stable": {
-    "version_name": "24.10.4",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.4-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/profiles.json",
+    "version_name": "24.10.5",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.5-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/profiles.json",
     "profiles": [
+      "9tripod_x3568-v4",
       "ariaboard_photonicat",
       "armsom_sige3",
       "armsom_sige7",
@@ -151,23 +158,28 @@
       "friendlyarm_nanopi-r6c",
       "friendlyarm_nanopi-r6s",
       "huake_guangmiao-g4c",
+      "linkease_easepi-r1",
       "lunzn_fastrhino-r66s",
       "lunzn_fastrhino-r68s",
       "lyt_t68m",
       "mmbox_anas3035",
-      "ninetripod_x3568-v4",
       "nlnet_xiguapi-v3",
       "pine64_rock64",
       "pine64_rockpro64",
       "radxa_cm3-io",
       "radxa_e25",
+      "radxa_e52c",
       "radxa_rock-3a",
       "radxa_rock-3b",
       "radxa_rock-3c",
       "radxa_rock-4c-plus",
       "radxa_rock-4se",
+      "radxa_rock-5-itx",
       "radxa_rock-5a",
       "radxa_rock-5b",
+      "radxa_rock-5b-plus",
+      "radxa_rock-5c",
+      "radxa_rock-5t",
       "radxa_rock-pi-4a",
       "radxa_rock-pi-e",
       "radxa_rock-pi-s",
@@ -179,6 +191,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-02-11T04:27:09.735279Z"
+    "last_updated": "2026-02-12T04:22:02.019661Z"
   }
 }
