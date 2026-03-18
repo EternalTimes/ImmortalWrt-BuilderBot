@@ -67,7 +67,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-03-17T04:14:27.700181Z"
+    "last_updated": "2026-03-18T04:21:54.861600Z"
   },
   "stable_24_10_5": {
     "version_name": "24.10.5",
@@ -129,7 +129,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-03-17T04:14:28.241949Z"
+    "last_updated": "2026-03-18T04:21:55.388283Z"
   },
   "latest_stable": {
     "version_name": "24.10.5",
@@ -191,6 +191,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-03-17T04:14:28.241949Z"
+    "last_updated": "2026-03-18T04:21:55.388283Z"
   }
 }
