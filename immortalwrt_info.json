@@ -67,12 +67,12 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-04-26T04:56:02.798496Z"
+    "last_updated": "2026-04-27T05:19:46.445468Z"
   },
-  "stable_24_10_5": {
-    "version_name": "24.10.5",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.5-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/profiles.json",
+  "stable_24_10_6": {
+    "version_name": "24.10.6",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.6/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.6-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.6/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "9tripod_x3568-v4",
       "ariaboard_photonicat",
@@ -129,12 +129,12 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-04-26T04:56:03.406613Z"
+    "last_updated": "2026-04-27T05:19:47.616197Z"
   },
   "latest_stable": {
-    "version_name": "24.10.5",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.5-rockchip-armv8.Linux-x86_64.tar.zst",
-    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.5/targets/rockchip/armv8/profiles.json",
+    "version_name": "24.10.6",
+    "imagebuilder_url": "https://downloads.immortalwrt.org/releases/24.10.6/targets/rockchip/armv8/immortalwrt-imagebuilder-24.10.6-rockchip-armv8.Linux-x86_64.tar.zst",
+    "profiles_json_url": "https://downloads.immortalwrt.org/releases/24.10.6/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "9tripod_x3568-v4",
       "ariaboard_photonicat",
@@ -191,6 +191,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-04-26T04:56:03.406613Z"
+    "last_updated": "2026-04-27T05:19:47.616197Z"
   }
 }
