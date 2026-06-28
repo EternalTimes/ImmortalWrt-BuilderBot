@@ -1,7 +1,7 @@
 {
   "snapshots": {
     "version_name": "Development Snapshots",
-    "imagebuilder_url": "https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/immortalwrt-imagebuilder-rockchip-armv8.Linux-x86_64.tar.zst",
+    "imagebuilder_url": null,
     "profiles_json_url": "https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/profiles.json",
     "profiles": [
       "9tripod_x3568-v4",
@@ -68,7 +68,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-06-27T05:49:57.939985Z"
+    "last_updated": "2026-06-28T06:14:05.847730Z"
   },
   "stable_25_12_0": {
     "version_name": "25.12.0",
@@ -138,7 +138,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-06-27T05:49:59.239324Z"
+    "last_updated": "2026-06-28T06:14:06.573802Z"
   },
   "latest_stable": {
     "version_name": "25.12.0",
@@ -208,6 +208,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-06-27T05:49:59.239324Z"
+    "last_updated": "2026-06-28T06:14:06.573802Z"
   }
 }
