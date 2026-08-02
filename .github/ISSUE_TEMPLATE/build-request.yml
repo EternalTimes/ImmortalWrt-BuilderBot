@@ -1,0 +1,152 @@
+name: Build Firmware Request
+description: 通过勾选 checkbox 触发 ImmortalWrt 固件构建,关闭 issue 后自动开始编译。
+title: "[Build] "
+labels: ["build"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 用法
+        1. **填写下面的字段**(设备、稳定性、根分区大小、网络参数等)
+        2. **勾选你想要的软件包**(可多选,会自动合并)
+        3. 在"附加包"里写任何不在列表里的额外包(空格分隔,可选)
+        4. 提交 issue 后,**给本 issue 打上 `build` 标签**(默认已打)
+        5. **关闭 issue** → 自动开始构建 → 编译完成后会在评论里看到 Release 链接
+
+        如果只想试一下手动 dispatch,请直接用仓库的 **Actions → Build ImmortalWrt (rockchip/armv8) → Run workflow**。
+
+  - type: input
+    id: device_profile
+    attributes:
+      label: 设备 Profile (必填)
+      description: |
+        必须是 immortalwrt 25.12.1 或 snapshot 支持的设备。可选值在
+        https://downloads.immortalwrt.org/releases/25.12.1/targets/rockchip/armv8/profiles.json
+        中列出。
+      placeholder: friendlyarm_nanopi-r2s
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build_stability
+    attributes:
+      label: 构建稳定性
+      description: snapshot 用每日构建(可能有 bug),stable 用 25.12.1(稳定版)。
+      options:
+        - stable
+        - snapshot
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: rootfs_size_mb
+    attributes:
+      label: RootFS 大小 (MB)
+      description: 根分区大小,默认 8192 MB。
+      placeholder: "8192"
+    validations:
+      required: false
+
+  - type: input
+    id: preinit_ip
+    attributes:
+      label: 预设 IP 地址
+      default: 192.168.1.1
+    validations:
+      required: false
+
+  - type: input
+    id: preinit_netmask
+    attributes:
+      label: 预设子网掩码
+      default: 255.255.255.0
+    validations:
+      required: false
+
+  - type: input
+    id: preinit_broadcast
+    attributes:
+      label: 预设广播地址
+      default: 192.168.1.255
+    validations:
+      required: false
+
+  - type: input
+    id: release_tag_suffix
+    attributes:
+      label: Release 标签自定义后缀 (可选)
+      description: 例如 "home" "office",会拼到 release 标签里便于区分。
+      placeholder: home
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: base_packages
+    attributes:
+      label: LuCI 与基础 (默认已包含)
+      description: |
+        下列项是构建脚本的默认包,关闭不会移除。如需移除,请在"附加包"里用 `-包名` 前缀。
+    options:
+      - label: LuCI Web UI (luci)
+        required: false
+      - label: LuCI 防火墙 (luci-app-firewall)
+        required: false
+      - label: LuCI 软件包管理 (luci-app-opkg)
+        required: false
+      - label: LuCI 主题 Bootstrap (luci-theme-bootstrap)
+        required: false
+
+  - type: checkboxes
+    id: extra_features
+    attributes:
+      label: 常用功能模块 (勾选后会自动加入)
+      options:
+      - label: WiFi 支持 (wpad-openssl + kmod-mt76xx-common 等)
+      - label: USB 存储 (kmod-usb-storage + 相关工具)
+      - label: 文件系统工具 (e2fsprogs + fdisk + dosfstools)
+      - label: UPnP (luci-app-upnp + miniupnpd)
+      - label: 动态 DNS (ddns-scripts + luci-app-ddns)
+      - label: SQM QoS (luci-app-sqm + sqm-scripts)
+      - label: WireGuard VPN (wireguard-tools + luci-app-wireguard)
+      - label: OpenVPN (openvpn-openssl + luci-app-openvpn)
+      - label: Tailscale (tailscale)
+      - label: AdGuardHome (adguardhome)
+      - label: Samba 网络共享 (luci-app-samba + samba4-server)
+      - label: NFS 服务器 (luci-app-nfs + nfs-kernel-server)
+      - label: miniDLNA (minidlna)
+      - label: ZeroTier (zerotier)
+      - label: Docker (docker + dockerd)
+      - label: Prometheus node exporter (prometheus-node-exporter-lua)
+
+  - type: textarea
+    id: custom_packages
+    attributes:
+      label: 附加包 (可选)
+      description: |
+        空格分隔的其他包名,会追加到上方勾选的包之后。
+        如需移除默认包,在包名前加 `-`(例如 `-luci-app-opkg`)。
+      placeholder: |
+        例如:
+          htop tmux irqbalance
+          -luci-theme-bootstrap
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: acknowledge
+    attributes:
+      label: 提交前确认
+      options:
+      - label: 我知道关闭 issue 会触发构建,构建产物会发布到 GitHub Release。
+        required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 高级说明
+        - 不在 checkbox 列表里的包 → 写到 "附加包" 字段
+        - 想移除默认包 → 在附加包里写 `-包名`(例如 `-luci-app-firewall`)
+        - 包名写错 → 构建脚本会自动过滤,无需重提交(看 workflow 日志的 retry 提示)

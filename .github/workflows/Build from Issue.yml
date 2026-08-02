@@ -1,0 +1,329 @@
+name: Build Firmware from Issue
+
+# Triggers when a build-request issue is closed (after a user fills out the
+# issue form at .github/ISSUE_TEMPLATE/build-request.yml and closes the issue).
+#
+# Flow:
+#   1. User opens an issue using the Build Firmware Request template
+#   2. Issue form collects: device, stability, rootfs, preinit network,
+#      release tag suffix, package checkbox selections, extra packages
+#   3. User closes the issue (the "build" label is auto-applied by the form)
+#   4. This workflow parses the issue body -> build config
+#   5. Downloads ImmortalWrt ImageBuilder, builds firmware, uploads to Release
+#   6. Posts a comment on the issue with the Release link
+#
+# Notes:
+#   * Existing "Build ImmortalWrt (rockchip/armv8)" workflow is untouched.
+#     This is a parallel, opt-in entry point.
+#   * If parsing the issue body fails, the workflow dumps the raw body to
+#     an artifact for debugging and posts a clear failure comment on the issue.
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+jobs:
+  build_from_issue:
+    name: Build ${{ github.event.issue.title }}
+    runs-on: ubuntu-latest
+    # Only act on issues created via our template (which adds the "build" label)
+    if: contains(github.event.issue.labels.*.name, 'build')
+
+    env:
+      SNAPSHOT_IMAGEBUILDER_URL: "https://downloads.immortalwrt.org/snapshots/targets/rockchip/armv8/immortalwrt-imagebuilder-rockchip-armv8.Linux-x86_64.tar.zst"
+      STABLE_IMAGEBUILDER_URL: "https://downloads.immortalwrt.org/releases/25.12.1/targets/rockchip/armv8/immortalwrt-imagebuilder-25.12.1-rockchip-armv8.Linux-x86_64.tar.zst"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch issue body
+        id: fetch_body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          mkdir -p /tmp/build && cd /tmp/build
+          gh api "repos/${{ github.repository }}/issues/${{ github.event.issue.number }}" \
+            --jq '.body // ""' > issue_body.md
+          echo "Body length: $(wc -c < issue_body.md) bytes"
+          if [ ! -s issue_body.md ]; then
+            echo "::error::Issue body is empty"
+            exit 1
+          fi
+
+      - name: Parse issue body into build config
+        id: parse
+        run: |
+          set -e
+          cd /tmp/build
+          python3 "$GITHUB_WORKSPACE/.github/scripts/parse_issue_body.py" \
+            --body-file issue_body.md \
+            --out build_config.json
+          echo "=== Parsed build config ==="
+          cat build_config.json
+
+      - name: Validate build config
+        id: validate
+        run: |
+          set -e
+          cd /tmp/build
+          python3 - <<'PY'
+          import json, sys
+          cfg = json.load(open("build_config.json"))
+          errors = []
+          if not cfg.get("device_profile"):
+              errors.append("device_profile missing")
+          if cfg.get("build_stability") not in ("snapshot", "stable"):
+              errors.append(f"build_stability must be snapshot or stable, got {cfg.get('build_stability')!r}")
+          if not cfg.get("acknowledged"):
+              errors.append("user did not check the 'I know this triggers a build' box")
+          if errors:
+              for e in errors:
+                  print(f"::error::{e}")
+              sys.exit(1)
+          print("Config validated OK")
+          PY
+
+      - name: Upload raw body + parsed config (debug aid)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-debug-${{ github.event.issue.number }}
+          path: /tmp/build/issue_body.md
+          if-no-files-found: ignore
+
+      - name: Comment failure on issue (parse / validate error)
+        if: failure() && steps.parse.outcome == 'failure' || steps.validate.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNum = context.issue.number;
+            const body = `Build request could not be processed.
+
+            **常见原因:**
+            - 设备 Profile 拼写错误(必须是 immortalwrt_info.json 里列出的 profile)
+            - 没有勾选"提交前确认"
+            - 字段缺失或格式不对
+
+            请重新提一个 issue,或在本 issue 里评论修复后的字段。`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNum,
+              body
+            });
+
+      - name: Install build dependencies
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends \
+            build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk \
+            git gettext libssl-dev xsltproc rsync wget curl unzip file ccache python3 python3-pip
+
+      - name: Configure ccache
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/ccache
+          ccache -M 5G
+          echo "CCACHE_DIR=$GITHUB_WORKSPACE/ccache" >> $GITHUB_ENV
+          echo "USE_CCACHE=1" >> $GITHUB_ENV
+
+      - name: Select ImageBuilder URL
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        id: set_imagebuilder_url
+        run: |
+          STABILITY=$(python3 -c "import json; print(json.load(open('/tmp/build/build_config.json'))['build_stability'])")
+          if [ "$STABILITY" = "snapshot" ]; then
+            echo "IMAGEBUILDER_URL=${SNAPSHOT_IMAGEBUILDER_URL}" >> $GITHUB_ENV
+          else
+            echo "IMAGEBUILDER_URL=${STABLE_IMAGEBUILDER_URL}" >> $GITHUB_ENV
+          fi
+          echo "Selected: $IMAGEBUILDER_URL"
+
+      - name: Download and extract ImageBuilder
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        run: |
+          echo "Downloading ImageBuilder: $IMAGEBUILDER_URL"
+          curl -L "$IMAGEBUILDER_URL" -o immortalwrt-imagebuilder.tar.zst
+          mkdir -p imagebuilder
+          tar --zstd -xf immortalwrt-imagebuilder.tar.zst -C imagebuilder --strip-components=1
+          echo "ImageBuilder extracted."
+
+      - name: Clean previous build
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          make clean || true
+
+      - name: Set custom .config options (rootfs / preinit network)
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          ROOTFS=$(python3 -c "import json; print(json.load(open('/tmp/build/build_config.json'))['rootfs_size_mb'])")
+          IP=$(python3 -c "import json; print(json.load(open('/tmp/build/build_config.json'))['preinit_ip'])")
+          NETMASK=$(python3 -c "import json; print(json.load(open('/tmp/build/build_config.json'))['preinit_netmask'])")
+          BCAST=$(python3 -c "import json; print(json.load(open('/tmp/build/build_config.json'))['preinit_broadcast'])")
+          set_config() {
+            local key="$1" value="$2"
+            grep -q "^${key}=" .config && \
+              sed -i "s|^${key}=.*|${key}=${value}|" .config || \
+              echo "${key}=${value}" >> .config
+          }
+          set_config CONFIG_TARGET_ROOTFS_PARTSIZE "$ROOTFS"
+          set_config CONFIG_TARGET_PREINIT_IP "\"$IP\""
+          set_config CONFIG_TARGET_PREINIT_NETMASK "\"$NETMASK\""
+          set_config CONFIG_TARGET_PREINIT_BROADCAST "\"$BCAST\""
+          grep -E 'CONFIG_TARGET_ROOTFS_PARTSIZE|CONFIG_TARGET_PREINIT_IP|CONFIG_TARGET_PREINIT_NETMASK|CONFIG_TARGET_PREINIT_BROADCAST' .config
+
+      - name: Build firmware with auto filter
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          set -e
+          # Load config from issue body parse, export as env vars consumed by build_with_filter.sh
+          python3 -c "
+          import json
+          cfg = json.load(open('/tmp/build/build_config.json'))
+          print(f\"Device: {cfg['device_profile']}\")
+          print(f\"Stability: {cfg['build_stability']}\")
+          print(f\"Custom packages: {cfg['custom_packages']}\")
+          print(f\"Tag suffix: {cfg['release_tag_suffix']}\")
+          open('/tmp/build_env.sh', 'w').write(
+              f\"export DEVICE_PROFILES='{cfg['device_profile']}'\\n\"
+              f\"export CUSTOM_PACKAGES='{cfg['custom_packages']}'\\n\"
+              f\"export RELEASE_TAG_SUFFIX='{cfg['release_tag_suffix']}'\\n\"
+          )
+          # Also persist for later steps (release body, comment)
+          with open('$GITHUB_ENV', 'a') as f:
+              f.write(f\"CUSTOM_PACKAGES_FROM_CONFIG={cfg['custom_packages']}\\n\")
+              f.write(f\"DEVICE_PROFILES_FROM_CONFIG={cfg['device_profile']}\\n\")
+              f.write(f\"RELEASE_TAG_SUFFIX_FROM_CONFIG={cfg['release_tag_suffix']}\\n\")
+          "
+          . /tmp/build_env.sh
+          bash "$GITHUB_WORKSPACE/.github/scripts/build_with_filter.sh"
+
+      - name: Collect images from tmp to bin dir
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        working-directory: ${{ github.workspace }}/imagebuilder
+        run: |
+          mkdir -p ./bin/targets/rockchip/armv8
+          find ./build_dir/ -type f -name '*.img*' -exec cp {} ./bin/targets/rockchip/armv8/ \;
+          find ./build_dir/ -type f -name '*.manifest' -exec cp {} ./bin/targets/rockchip/armv8/ \;
+          find ./build_dir/ -type f -name '*buildinfo' -exec cp {} ./bin/targets/rockchip/armv8/ \;
+
+      - name: Prepare artifacts for release
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        id: prepare_artifacts
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -e
+          python3 -c "
+          import json, subprocess
+          cfg = json.load(open('/tmp/build/build_config.json'))
+          import datetime
+          now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+          san = cfg['device_profile'].replace(' ', '_')
+          stab = 'Snapshot' if cfg['build_stability'] == 'snapshot' else 'Stable'
+          tag = f\"{now.replace(' ', '-').replace(':', '-')}_ImmortalWrt_{san}_{stab}\"
+          if cfg.get('release_tag_suffix'):
+              tag = f\"{tag}_{cfg['release_tag_suffix']}\"
+          title = f\"{now} ImmortalWrt {san} {stab}\"
+          print(f'TAG={tag}')
+          print(f'TITLE={title}')
+          open('/tmp/release.env', 'w').write(f'TAG={tag}\\nTITLE={title}\\n')
+          "
+          . /tmp/release.env
+          ARTIFACT_DIR="${{ github.workspace }}/imagebuilder/bin/targets/rockchip/armv8"
+          if [ ! -d "$ARTIFACT_DIR" ] || [ -z "$(ls -A $ARTIFACT_DIR)" ]; then
+            echo "::error::Artifact directory $ARTIFACT_DIR is empty"
+            exit 1
+          fi
+          echo "ARTIFACT_DIR=$ARTIFACT_DIR" >> $GITHUB_ENV
+          echo "release_tag=$TAG" >> $GITHUB_OUTPUT
+          echo "release_title=$TITLE" >> $GITHUB_OUTPUT
+
+      - name: Upload firmware to Release
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success' && steps.prepare_artifacts.outputs.release_tag
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.WORKFLOW_WRITE_TOKEN }}
+          tag_name: ${{ steps.prepare_artifacts.outputs.release_tag }}
+          name: ${{ steps.prepare_artifacts.outputs.release_title }}
+          body: |
+            ImmortalWrt firmware built from issue #${{ github.event.issue.number }}.
+
+            **Issue:** #${{ github.event.issue.number }}
+            **Device Profile:** ${{ github.event.issue.title }}
+            **Target:** rockchip/armv8
+            **ImageBuilder URL:** ${{ env.IMAGEBUILDER_URL }}
+
+            **Custom Packages:**
+            ```
+            ${{ env.CUSTOM_PACKAGES_FROM_CONFIG }}
+            ```
+
+            **Workflow Run:** ${{ github.run_id }}
+            **Commit:** ${{ github.sha }}
+          files: |
+            ${{ env.ARTIFACT_DIR }}/*.img.gz
+            ${{ env.ARTIFACT_DIR }}/*.img
+            ${{ env.ARTIFACT_DIR }}/*.manifest
+            ${{ env.ARTIFACT_DIR }}/*.json
+            ${{ env.ARTIFACT_DIR }}/sha256sums
+          fail_on_unmatched_files: false
+
+      - name: Comment on issue with release link
+        if: steps.parse.outcome == 'success' && steps.validate.outcome == 'success' && steps.prepare_artifacts.outputs.release_tag
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = '${{ steps.prepare_artifacts.outputs.release_tag }}';
+            const url = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/${tag}`;
+            const issueNum = context.issue.number;
+            const packages = process.env.CUSTOM_PACKAGES_FROM_CONFIG || '';
+            const body = `✅ 构建完成
+
+            **Release:** [${tag}](${url})
+
+            **配置摘要:**
+            - 设备: \`${{ github.event.issue.title }}\`
+            - 自定义包: \`${packages}\`
+
+            固件文件已上传到上方的 Release。如果构建失败,请查看 workflow 日志 [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})。`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNum,
+              body
+            });
+
+      - name: Comment on issue with build failure
+        if: failure() && steps.parse.outcome == 'success' && steps.validate.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNum = context.issue.number;
+            const runUrl = `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
+            const body = `❌ 构建失败
+
+            解析 issue body 成功,但编译过程中出错。请查看日志:${runUrl}
+
+            如果是某个包名写错导致的,脚本已经自动剔除了无效包;如果仍然失败,通常是包之间依赖冲突或镜像源问题。`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNum,
+              body
+            });
