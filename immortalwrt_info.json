@@ -29,6 +29,8 @@
       "friendlyarm_nanopi-r6c",
       "friendlyarm_nanopi-r6s",
       "friendlyarm_nanopi-r76s",
+      "friendlyarm_nanopi-zero2",
+      "graperain_g3568-v2",
       "huake_guangmiao-g4c",
       "linkease_easepi-r1",
       "lunzn_fastrhino-r66s",
@@ -69,7 +71,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-09-20T07:22:46.109222Z"
+    "last_updated": "2026-09-21T07:32:57.045683Z"
   },
   "stable_25_12_2": {
     "version_name": "25.12.2",
@@ -140,7 +142,7 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-09-20T07:22:47.334004Z"
+    "last_updated": "2026-09-21T07:32:58.244687Z"
   },
   "latest_stable": {
     "version_name": "25.12.2",
@@ -211,6 +213,6 @@
       "xunlong_orangepi-r1-plus",
       "xunlong_orangepi-r1-plus-lts"
     ],
-    "last_updated": "2026-09-20T07:22:47.334004Z"
+    "last_updated": "2026-09-21T07:32:58.244687Z"
   }
 }
